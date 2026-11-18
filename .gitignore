@@ -1,0 +1,13 @@
+bin/
+data/
+.env
+*.log
+
+# editor and local secrets
+*.swp
+.DS_Store
+.env.*
+!.env.example
+benchmark-results/
+__pycache__/
+*.pyc

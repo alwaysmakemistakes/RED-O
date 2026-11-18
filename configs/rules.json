@@ -1,0 +1,257 @@
+{
+  "rules": [
+    {
+      "id": "R001",
+      "name": "Unexpected shell execution",
+      "enabled": true,
+      "severity": "medium",
+      "description": "Shell started inside monitored workload",
+      "event_type": "process.exec",
+      "namespace_allow": [
+        "security-lab"
+      ],
+      "binary_in": [
+        "/bin/sh",
+        "/bin/bash",
+        "/usr/bin/bash"
+      ]
+    },
+    {
+      "id": "R002",
+      "name": "Sensitive file access attempt",
+      "enabled": true,
+      "severity": "high",
+      "description": "Observed permission check for a sensitive file",
+      "event_type": "file.access",
+      "namespace_allow": [
+        "security-lab"
+      ],
+      "path_in": [
+        "/etc/shadow",
+        "/etc/gshadow",
+        "/var/run/secrets/kubernetes.io/serviceaccount/token"
+      ]
+    },
+    {
+      "id": "R003",
+      "name": "Connection to monitored destination",
+      "enabled": true,
+      "severity": "high",
+      "description": "TCP connect attempt to a lab destination on selected ports",
+      "event_type": "network.connect",
+      "namespace_allow": [
+        "security-lab"
+      ],
+      "destination_ips": [
+        "1.1.1.1",
+        "1.0.0.1"
+      ],
+      "destination_ports": [
+        80,
+        443
+      ]
+    },
+    {
+      "id": "R004",
+      "name": "Suspicious tool execution",
+      "enabled": true,
+      "severity": "medium",
+      "description": "Execution of a selected administrative or network utility",
+      "event_type": "process.exec",
+      "namespace_allow": [
+        "security-lab"
+      ],
+      "binary_in": [
+        "/usr/bin/nc",
+        "/bin/nc",
+        "/usr/bin/nmap",
+        "/bin/wget"
+      ]
+    },
+    {
+      "id": "R009",
+      "name": "Command interpreter with inline command",
+      "enabled": true,
+      "severity": "medium",
+      "description": "Execution of a shell -c command; command content not inherently malicious",
+      "event_type": "process.exec",
+      "namespace_allow": [
+        "security-lab"
+      ],
+      "binary_regex": "/(?:sh|bash|dash|ash)$",
+      "arguments_regex": "(?:^|\\s)-c(?:\\s|$)"
+    },
+    {
+      "id": "R010",
+      "name": "Kubernetes credential file access",
+      "enabled": true,
+      "severity": "high",
+      "description": "Access to a service account token, kubeconfig or cluster admin credential; not proof of theft",
+      "event_type": "file.access",
+      "namespace_allow": [
+        "security-lab"
+      ],
+      "path_regex": "(?:^/(?:var/)?run/secrets/kubernetes\\.io/serviceaccount/(?:\\.\\.[^/]+/)?token$|(?:^|/)(?:\\.kube/config|admin\\.conf)$)"
+    },
+    {
+      "id": "R011",
+      "name": "Capability change hook observed",
+      "enabled": true,
+      "severity": "medium",
+      "description": "security_capset was invoked inside the workload; capabilities gained and syscall success are not established",
+      "event_type": "kernel.hook",
+      "namespace_allow": [
+        "security-lab"
+      ],
+      "function_in": [
+        "security_capset"
+      ]
+    },
+    {
+      "id": "R012",
+      "name": "Namespace manipulation utility",
+      "enabled": true,
+      "severity": "high",
+      "description": "Execution of nsenter/unshare/setns-capable tooling; container escape not established",
+      "event_type": "process.exec",
+      "namespace_allow": [
+        "security-lab"
+      ],
+      "binary_regex": "/(?:nsenter|unshare)$"
+    },
+    {
+      "id": "R013",
+      "name": "Connection into private network",
+      "enabled": true,
+      "severity": "low",
+      "description": "TCP connection attempt into RFC1918 network; interaction with other services is not necessarily malicious",
+      "event_type": "network.connect",
+      "namespace_allow": [
+        "security-lab"
+      ],
+      "destination_cidrs": [
+        "10.0.0.0/8",
+        "172.16.0.0/12",
+        "192.168.0.0/16"
+      ]
+    },
+    {
+      "id": "R014",
+      "name": "Known mining program execution",
+      "enabled": true,
+      "severity": "high",
+      "description": "Execution of a binary commonly associated with cryptocurrency mining; verify workload allowlist",
+      "event_type": "process.exec",
+      "namespace_allow": [
+        "security-lab"
+      ],
+      "binary_regex": "/(?:xmrig|cpuminer|minerd|ethminer|t-rex)$"
+    },
+    {
+      "id": "R015",
+      "name": "Connection to common mining-pool port",
+      "enabled": true,
+      "severity": "medium",
+      "description": "TCP connect attempt to a port often used by mining pools; ports are not definitive",
+      "event_type": "network.connect",
+      "namespace_allow": [
+        "security-lab"
+      ],
+      "destination_ports": [
+        3333,
+        4444,
+        5555,
+        7777,
+        14444
+      ]
+    },
+    {
+      "id": "R016",
+      "name": "Kubernetes workload creation recorded",
+      "enabled": true,
+      "severity": "medium",
+      "description": "Successful create of a workload through the Kubernetes API audit log; authorization must be assessed separately",
+      "event_type": "k8s.audit",
+      "namespace_allow": [
+        "security-lab"
+      ],
+      "audit_verbs": [
+        "create"
+      ],
+      "audit_resources": [
+        "pods",
+        "deployments",
+        "daemonsets",
+        "statefulsets",
+        "jobs",
+        "cronjobs"
+      ]
+    },
+    {
+      "id": "R017",
+      "name": "Container-runtime socket access",
+      "enabled": true,
+      "severity": "critical",
+      "description": "Attempted access to container runtime control socket; may enable breakout depending on permissions",
+      "event_type": "file.access",
+      "namespace_allow": [
+        "security-lab"
+      ],
+      "path_regex": "^/(?:var/)?run/(?:containerd/containerd\\.sock|docker\\.sock|crio/crio\\.sock)$"
+    },
+    {
+      "id": "R018",
+      "name": "Privilege management utility executed",
+      "enabled": true,
+      "severity": "medium",
+      "description": "Execution of an administrative credential/capability tool; not proof of privilege escalation",
+      "event_type": "process.exec",
+      "namespace_allow": [
+        "security-lab"
+      ],
+      "binary_regex": "/(?:sudo|su|setcap|capsh|setpriv)$"
+    },
+    {
+      "id": "R019",
+      "name": "Internal network discovery utility",
+      "enabled": true,
+      "severity": "medium",
+      "description": "Execution of network discovery tooling in container",
+      "event_type": "process.exec",
+      "namespace_allow": [
+        "security-lab"
+      ],
+      "binary_regex": "/(?:nmap|masscan|arp-scan|fping)$"
+    },
+    {
+      "id": "R022",
+      "name": "Process privilege raise recorded by Tetragon",
+      "enabled": true,
+      "severity": "high",
+      "description": "Tetragon reports a PRIVILEGES_RAISED_* exec property; confirm actual credentials, container context and authorization",
+      "event_type": "process.exec",
+      "namespace_allow": [
+        "security-lab"
+      ],
+      "privileges_raised": true
+    },
+    {
+      "id": "R021",
+      "name": "Possible internal network enumeration",
+      "enabled": true,
+      "severity": "medium",
+      "description": "At least five distinct internal destinations within 30s from the same container; benign service discovery may match",
+      "event_type": "network.connect",
+      "namespace_allow": [
+        "security-lab"
+      ],
+      "destination_cidrs": [
+        "10.0.0.0/8",
+        "172.16.0.0/12",
+        "192.168.0.0/16"
+      ],
+      "distinct_destinations": 5,
+      "window_seconds": 30
+    }
+  ]
+}

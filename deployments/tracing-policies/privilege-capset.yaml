@@ -1,0 +1,10 @@
+apiVersion: cilium.io/v1alpha1
+kind: TracingPolicy
+metadata:
+  name: red-o-privilege-capset
+spec:
+  kprobes:
+    - call: security_capset
+      syscall: false
+      # The hook reports a capability-change attempt, not a confirmed gain.
+      # Check that this symbol is available on the target kernel before apply.
