@@ -1,0 +1,156 @@
+{
+  "correlations": [
+    {
+      "id": "R005",
+      "name": "Shell to sensitive file to network",
+      "enabled": true,
+      "severity": "critical",
+      "description": "Ordered indicators within the same Kubernetes container; requires investigation",
+      "window_seconds": 60,
+      "process_tree": true,
+      "namespace_allow": [
+        "security-lab"
+      ],
+      "steps": [
+        {
+          "event_type": "process.exec",
+          "binary_in": [
+            "/bin/sh",
+            "/bin/bash",
+            "/usr/bin/bash"
+          ]
+        },
+        {
+          "event_type": "file.access",
+          "path_in": [
+            "/etc/shadow",
+            "/etc/gshadow",
+            "/etc/passwd"
+          ]
+        },
+        {
+          "event_type": "network.connect",
+          "destination_ips": [
+            "1.1.1.1",
+            "1.0.0.1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "R006",
+      "name": "Shell process followed by outbound connection",
+      "enabled": true,
+      "severity": "high",
+      "description": "Shell or descendant attempted a monitored TCP connection; investigate potential remote shell activity (not proof of reverse shell)",
+      "window_seconds": 30,
+      "process_tree": true,
+      "namespace_allow": [
+        "security-lab"
+      ],
+      "steps": [
+        {
+          "event_type": "process.exec",
+          "binary_in": [
+            "/bin/sh",
+            "/bin/bash",
+            "/usr/bin/bash"
+          ]
+        },
+        {
+          "event_type": "network.connect",
+          "destination_ips": [
+            "1.1.1.1",
+            "1.0.0.1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "R007",
+      "name": "Service account token access followed by external connection",
+      "enabled": true,
+      "severity": "critical",
+      "description": "Process tree accessed service account token and then attempted monitored outbound TCP; exfiltration is not established",
+      "window_seconds": 45,
+      "process_tree": true,
+      "namespace_allow": [
+        "security-lab"
+      ],
+      "steps": [
+        {
+          "event_type": "file.access",
+          "path_regex": "^/(?:var/)?run/secrets/kubernetes\\.io/serviceaccount/(?:\\.\\.[^/]+/)?token$"
+        },
+        {
+          "event_type": "network.connect",
+          "destination_ips": [
+            "1.1.1.1",
+            "1.0.0.1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "R008",
+      "name": "Network utility execution followed by outbound connect",
+      "enabled": true,
+      "severity": "medium",
+      "description": "Network utility and descendant attempted a monitored TCP connection; may represent benign diagnostics",
+      "window_seconds": 20,
+      "process_tree": true,
+      "namespace_allow": [
+        "security-lab"
+      ],
+      "steps": [
+        {
+          "event_type": "process.exec",
+          "binary_in": [
+            "/bin/wget",
+            "/usr/bin/wget",
+            "/usr/bin/curl",
+            "/bin/nc",
+            "/usr/bin/nc"
+          ]
+        },
+        {
+          "event_type": "network.connect",
+          "destination_ips": [
+            "1.1.1.1",
+            "1.0.0.1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "R020",
+      "name": "Shell followed by internal service connection",
+      "enabled": true,
+      "severity": "medium",
+      "description": "A shell or descendant initiated a TCP connection into a monitored internal network; not proof of lateral movement",
+      "window_seconds": 30,
+      "process_tree": true,
+      "namespace_allow": [
+        "security-lab"
+      ],
+      "steps": [
+        {
+          "event_type": "process.exec",
+          "binary_in": [
+            "/bin/sh",
+            "/bin/bash",
+            "/usr/bin/bash"
+          ]
+        },
+        {
+          "event_type": "network.connect",
+          "destination_cidrs": [
+            "10.0.0.0/8",
+            "172.16.0.0/12",
+            "192.168.0.0/16"
+          ]
+        }
+      ]
+    }
+  ]
+}

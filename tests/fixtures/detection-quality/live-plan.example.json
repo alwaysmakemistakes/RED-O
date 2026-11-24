@@ -1,0 +1,84 @@
+{
+  "schema_version": "1.0",
+  "notes": "Seven scenario families are represented. All actions are DISABLED by default. Prepare dedicated lab-only Pods and services; review and modify selectors, commands and independent ground-truth labels before --execute. Indicators do not prove compromise.",
+  "trials": [
+    {
+      "id": "C001-{{RUN_ID}}", "scenario": "commands", "label": "positive", "enabled": false,
+      "command": ["kubectl", "exec", "-n", "security-lab", "ebpf-test", "--", "/bin/sh", "-c", "printf '%s\\n' 'redo-C001-{{RUN_ID}}'"],
+      "selector": {"event_type": "process.exec", "kubernetes.pod": "ebpf-test", "process.arguments_contains": "redo-C001-{{RUN_ID}}"}, "expected_events": 1
+    },
+    {
+      "id": "C002-{{RUN_ID}}", "scenario": "commands", "label": "negative", "enabled": false,
+      "command": ["kubectl", "exec", "-n", "security-lab", "ebpf-test", "--", "/bin/sh", "-c", "printf '%s\\n' 'redo-C002-{{RUN_ID}}'"],
+      "selector": {"event_type": "process.exec", "kubernetes.pod": "ebpf-test", "process.arguments_contains": "redo-C002-{{RUN_ID}}"}, "expected_events": 1
+    },
+    {
+      "id": "K001-{{RUN_ID}}", "scenario": "credentials", "label": "positive", "enabled": false,
+      "notes": "Requires prepared token-mounted Pod: redo-quality-cred. Read one byte only; no token output.",
+      "command": ["kubectl", "exec", "-n", "security-lab", "redo-quality-cred", "--", "dd", "if=/var/run/secrets/kubernetes.io/serviceaccount/token", "of=/dev/null", "bs=1", "count=1"],
+      "selector": {"event_type": "file.access", "kubernetes.pod": "redo-quality-cred", "file.path_regex": "/token$"}, "expected_events": 1
+    },
+    {
+      "id": "K003-{{RUN_ID}}", "scenario": "credentials", "label": "negative", "enabled": false,
+      "command": ["kubectl", "exec", "-n", "security-lab", "redo-quality-cred", "--", "dd", "if=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt", "of=/dev/null", "bs=1", "count=1"],
+      "selector": {"event_type": "file.access", "kubernetes.pod": "redo-quality-cred", "file.path_regex": "/ca\\.crt$"}, "expected_events": 1
+    },
+    {
+      "id": "P001-{{RUN_ID}}", "scenario": "privilege", "label": "positive", "enabled": false,
+      "notes": "Only an indicator of invocation, not privilege escalation. Requires setpriv installed. Review the intended label.",
+      "command": ["kubectl", "exec", "-n", "security-lab", "redo-quality-utils", "--", "setpriv", "--help"],
+      "selector": {"event_type": "process.exec", "kubernetes.pod": "redo-quality-utils", "process.binary_regex": "/setpriv$"}, "expected_events": 1
+    },
+    {
+      "id": "P002-{{RUN_ID}}", "scenario": "privilege", "label": "negative", "enabled": false,
+      "command": ["kubectl", "exec", "-n", "security-lab", "redo-quality-utils", "--", "id"],
+      "selector": {"event_type": "process.exec", "kubernetes.pod": "redo-quality-utils", "process.binary_regex": "/id$"}, "expected_events": 1
+    },
+    {
+      "id": "E001-{{RUN_ID}}", "scenario": "escape", "label": "positive", "enabled": false,
+      "notes": "Help invocation only; does not escape a container. Requires nsenter binary installed.",
+      "command": ["kubectl", "exec", "-n", "security-lab", "redo-quality-utils", "--", "nsenter", "--help"],
+      "selector": {"event_type": "process.exec", "kubernetes.pod": "redo-quality-utils", "process.binary_regex": "/nsenter$"}, "expected_events": 1
+    },
+    {
+      "id": "E002-{{RUN_ID}}", "scenario": "escape", "label": "negative", "enabled": false,
+      "command": ["kubectl", "exec", "-n", "security-lab", "redo-quality-utils", "--", "id"],
+      "selector": {"event_type": "process.exec", "kubernetes.pod": "redo-quality-utils", "process.binary_regex": "/id$"}, "expected_events": 1
+    },
+    {
+      "id": "N001-{{RUN_ID}}", "scenario": "network", "label": "positive", "enabled": false,
+      "notes": "Replace five placeholder IP addresses with dedicated test ClusterIPs before enabling; no real network scanning.",
+      "command": ["kubectl", "exec", "-n", "security-lab", "redo-quality-python", "--", "python3", "-c", "import socket,sys\nfor ip in sys.argv[1:]:\n s=socket.socket();s.settimeout(.2)\n try:s.connect((ip,8080))\n except OSError:pass\n finally:s.close()", "10.43.X.1", "10.43.X.2", "10.43.X.3", "10.43.X.4", "10.43.X.5"],
+      "selector": {"event_type": "network.connect", "kubernetes.pod": "redo-quality-python", "network.destination_ip": ["10.43.X.1", "10.43.X.2", "10.43.X.3", "10.43.X.4", "10.43.X.5"]}, "expected_events": 5
+    },
+    {
+      "id": "N002-{{RUN_ID}}", "scenario": "network", "label": "negative", "enabled": false,
+      "notes": "Replace the placeholder IP with a dedicated test ClusterIP.",
+      "command": ["kubectl", "exec", "-n", "security-lab", "redo-quality-python", "--", "python3", "-c", "import socket,sys\nfor x in range(5):\n s=socket.socket();s.settimeout(.2)\n try:s.connect((sys.argv[1],8080))\n except OSError:pass\n finally:s.close()", "10.43.X.1"],
+      "selector": {"event_type": "network.connect", "kubernetes.pod": "redo-quality-python", "network.destination_ip": "10.43.X.1"}, "expected_events": 5
+    },
+    {
+      "id": "R001-{{RUN_ID}}", "scenario": "resources", "label": "positive", "enabled": false,
+      "notes": "Requires a safe inert test executable named xmrig. Do not execute real mining software or label this as confirmed resource theft.",
+      "command": ["kubectl", "exec", "-n", "security-lab", "redo-quality-utils", "--", "/tmp/xmrig", "--help"],
+      "selector": {"event_type": "process.exec", "kubernetes.pod": "redo-quality-utils", "process.binary_regex": "/xmrig$"}, "expected_events": 1
+    },
+    {
+      "id": "R002-{{RUN_ID}}", "scenario": "resources", "label": "negative", "enabled": false,
+      "command": ["kubectl", "exec", "-n", "security-lab", "redo-quality-utils", "--", "sleep", "1"],
+      "selector": {"event_type": "process.exec", "kubernetes.pod": "redo-quality-utils", "process.binary_regex": "/sleep$"}, "expected_events": 1
+    },
+    {
+      "id": "W001-{{RUN_ID}}", "scenario": "workload", "label": "positive", "enabled": false,
+      "notes": "Positive means simulated unapproved change under an explicitly recorded lab change policy, not RBAC bypass.",
+      "command": ["kubectl", "run", "redo-wp-{{RUN_ID}}", "-n", "security-lab", "--image=busybox:1.36", "--restart=Never", "--command", "--", "sleep", "60"],
+      "selector": {"event_type": "k8s.audit", "audit.verb": "create", "audit.name": "redo-wp-{{RUN_ID}}"}, "expected_events": 1
+    },
+    {
+      "id": "W002-{{RUN_ID}}", "scenario": "workload", "label": "negative", "enabled": false,
+      "notes": "Negative means approved change under recorded lab change policy.",
+      "command": ["kubectl", "run", "redo-wa-{{RUN_ID}}", "-n", "security-lab", "--image=busybox:1.36", "--restart=Never", "--command", "--", "sleep", "60"],
+      "selector": {"event_type": "k8s.audit", "audit.verb": "create", "audit.name": "redo-wa-{{RUN_ID}}"}, "expected_events": 1
+    }
+  ]
+}

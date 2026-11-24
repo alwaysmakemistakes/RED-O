@@ -1,0 +1,1406 @@
+{
+  "schema_version": "1.0",
+  "scenarios": [
+    {
+      "id": "commands",
+      "title": "Выполнение команд в контейнере",
+      "target_rules": [
+        "R001",
+        "R009"
+      ],
+      "cases": [
+        {
+          "id": "commands-01",
+          "label": "positive",
+          "rationale": "Shell с inline-командой, индикатор исполнения",
+          "events": [
+            {
+              "schema_version": "1.0",
+              "event_type": "process.exec",
+              "timestamp": "2026-11-18T12:00:00Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "/bin/sh",
+                "arguments": "-c id",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              }
+            }
+          ]
+        },
+        {
+          "id": "commands-02",
+          "label": "positive",
+          "rationale": "Подозрительный запуск bash",
+          "events": [
+            {
+              "schema_version": "1.0",
+              "event_type": "process.exec",
+              "timestamp": "2026-11-18T12:00:00Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "/usr/bin/bash",
+                "arguments": "-c whoami",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              }
+            }
+          ]
+        },
+        {
+          "id": "commands-03",
+          "label": "positive",
+          "rationale": "Выполнение команд через Python без shell binary; потенциальный обход сигнатуры",
+          "events": [
+            {
+              "schema_version": "1.0",
+              "event_type": "process.exec",
+              "timestamp": "2026-11-18T12:00:00Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "/usr/bin/python3",
+                "arguments": "-c import os;os.system('id')",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              }
+            }
+          ]
+        },
+        {
+          "id": "commands-04",
+          "label": "negative",
+          "rationale": "Штатный обслуживающий процесс",
+          "events": [
+            {
+              "schema_version": "1.0",
+              "event_type": "process.exec",
+              "timestamp": "2026-11-18T12:00:00Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "/bin/sleep",
+                "arguments": "10",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              }
+            }
+          ]
+        },
+        {
+          "id": "commands-05",
+          "label": "negative",
+          "rationale": "Разрешённый shell-запуск при обслуживании создаёт возможное FP",
+          "events": [
+            {
+              "schema_version": "1.0",
+              "event_type": "process.exec",
+              "timestamp": "2026-11-18T12:00:00Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "/bin/sh",
+                "arguments": "-c echo healthcheck",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "credentials",
+      "title": "Доступ к учетным данным Kubernetes",
+      "target_rules": [
+        "R007",
+        "R010"
+      ],
+      "cases": [
+        {
+          "id": "credentials-01",
+          "label": "positive",
+          "rationale": "Доступ к смонтированному ServiceAccount token",
+          "events": [
+            {
+              "schema_version": "1.0",
+              "event_type": "file.access",
+              "timestamp": "2026-11-18T12:00:00Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "/usr/bin/python3",
+                "arguments": "",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              },
+              "file": {
+                "path": "/run/secrets/kubernetes.io/serviceaccount/..2026_11_18/token"
+              }
+            }
+          ]
+        },
+        {
+          "id": "credentials-02",
+          "label": "positive",
+          "rationale": "Доступ к kubeconfig",
+          "events": [
+            {
+              "schema_version": "1.0",
+              "event_type": "file.access",
+              "timestamp": "2026-11-18T12:00:00Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "/usr/bin/python3",
+                "arguments": "",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              },
+              "file": {
+                "path": "/home/app/.kube/config"
+              }
+            }
+          ]
+        },
+        {
+          "id": "credentials-03",
+          "label": "positive",
+          "rationale": "Запрос секретов через Kubernetes API не покрывается правилом чтения токена",
+          "events": [
+            {
+              "schema_version": "1.0",
+              "event_type": "k8s.audit",
+              "timestamp": "2026-11-18T12:00:00Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "",
+                "arguments": "",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              },
+              "audit": {
+                "verb": "get",
+                "resource": "secrets",
+                "name": "db-secret",
+                "user": "system:serviceaccount:security-lab:workload",
+                "response_code": 200,
+                "stage": "ResponseComplete"
+              }
+            }
+          ]
+        },
+        {
+          "id": "credentials-04",
+          "label": "negative",
+          "rationale": "Штатное чтение сертификата CA",
+          "events": [
+            {
+              "schema_version": "1.0",
+              "event_type": "file.access",
+              "timestamp": "2026-11-18T12:00:00Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "/usr/bin/python3",
+                "arguments": "",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              },
+              "file": {
+                "path": "/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+              }
+            }
+          ]
+        },
+        {
+          "id": "credentials-05",
+          "label": "negative",
+          "rationale": "Разрешённое чтение ServiceAccount token вызывает индикатор",
+          "events": [
+            {
+              "schema_version": "1.0",
+              "event_type": "file.access",
+              "timestamp": "2026-11-18T12:00:00Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "/usr/bin/auth-agent",
+                "arguments": "",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              },
+              "file": {
+                "path": "/run/secrets/kubernetes.io/serviceaccount/..2026_11_18/token"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "privilege",
+      "title": "Повышение привилегий процесса (индикаторы)",
+      "target_rules": [
+        "R011",
+        "R018",
+        "R022"
+      ],
+      "cases": [
+        {
+          "id": "privilege-01",
+          "label": "positive",
+          "rationale": "Tetragon подтвердил изменение свойства привилегий exec",
+          "events": [
+            {
+              "schema_version": "1.0",
+              "event_type": "process.exec",
+              "timestamp": "2026-11-18T12:00:00Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "/usr/bin/id",
+                "arguments": "",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000,
+                "privileges_changed": [
+                  "PRIVILEGES_RAISED_EXEC_FILE_SETUID"
+                ]
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              }
+            }
+          ]
+        },
+        {
+          "id": "privilege-02",
+          "label": "positive",
+          "rationale": "Системный вызов изменения capabilities; успех не установлен",
+          "events": [
+            {
+              "schema_version": "1.0",
+              "event_type": "kernel.hook",
+              "timestamp": "2026-11-18T12:00:00Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "/usr/bin/capsh",
+                "arguments": "",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              },
+              "function": "security_capset"
+            }
+          ]
+        },
+        {
+          "id": "privilege-03",
+          "label": "positive",
+          "rationale": "Потенциальное изменение UID без соответствующего наблюдаемого сигнала",
+          "events": [
+            {
+              "schema_version": "1.0",
+              "event_type": "kernel.hook",
+              "timestamp": "2026-11-18T12:00:00Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "/usr/bin/custom-tool",
+                "arguments": "",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              },
+              "function": "security_task_fix_setuid"
+            }
+          ]
+        },
+        {
+          "id": "privilege-04",
+          "label": "negative",
+          "rationale": "Событие только со снижением привилегий",
+          "events": [
+            {
+              "schema_version": "1.0",
+              "event_type": "process.exec",
+              "timestamp": "2026-11-18T12:00:00Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "/usr/bin/id",
+                "arguments": "",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000,
+                "privileges_changed": [
+                  "PRIVILEGES_DROPPED_EXEC_FILE_CAP"
+                ]
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              }
+            }
+          ]
+        },
+        {
+          "id": "privilege-05",
+          "label": "negative",
+          "rationale": "Разрешённый вызов setpriv вызывает потенциальное FP",
+          "events": [
+            {
+              "schema_version": "1.0",
+              "event_type": "process.exec",
+              "timestamp": "2026-11-18T12:00:00Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "/usr/bin/setpriv",
+                "arguments": "--reuid 1000",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "escape",
+      "title": "Признаки выхода за границы контейнера",
+      "target_rules": [
+        "R012",
+        "R017"
+      ],
+      "cases": [
+        {
+          "id": "escape-01",
+          "label": "positive",
+          "rationale": "Запуск nsenter как потенциального инструмента выхода за namespaces",
+          "events": [
+            {
+              "schema_version": "1.0",
+              "event_type": "process.exec",
+              "timestamp": "2026-11-18T12:00:00Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "/usr/bin/nsenter",
+                "arguments": "--target 1 --mount",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              }
+            }
+          ]
+        },
+        {
+          "id": "escape-02",
+          "label": "positive",
+          "rationale": "Открытие control socket containerd; успех не установлен",
+          "events": [
+            {
+              "schema_version": "1.0",
+              "event_type": "file.access",
+              "timestamp": "2026-11-18T12:00:00Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "/usr/bin/python3",
+                "arguments": "",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              },
+              "file": {
+                "path": "/run/containerd/containerd.sock"
+              }
+            }
+          ]
+        },
+        {
+          "id": "escape-03",
+          "label": "positive",
+          "rationale": "Обращение к procfs host-root без прямой сигнатуры",
+          "events": [
+            {
+              "schema_version": "1.0",
+              "event_type": "file.access",
+              "timestamp": "2026-11-18T12:00:00Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "/usr/bin/python3",
+                "arguments": "",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              },
+              "file": {
+                "path": "/proc/1/root/etc/hostname"
+              }
+            }
+          ]
+        },
+        {
+          "id": "escape-04",
+          "label": "negative",
+          "rationale": "Обычный доступ к /etc/hosts",
+          "events": [
+            {
+              "schema_version": "1.0",
+              "event_type": "file.access",
+              "timestamp": "2026-11-18T12:00:00Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "/usr/bin/python3",
+                "arguments": "",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              },
+              "file": {
+                "path": "/etc/hosts"
+              }
+            }
+          ]
+        },
+        {
+          "id": "escape-05",
+          "label": "negative",
+          "rationale": "Разрешённая диагностика nsenter вызывает потенциальное FP",
+          "events": [
+            {
+              "schema_version": "1.0",
+              "event_type": "process.exec",
+              "timestamp": "2026-11-18T12:00:00Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "/usr/bin/nsenter",
+                "arguments": "--target 1 --pid",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "network",
+      "title": "Внутренняя разведка и взаимодействие с сервисами",
+      "target_rules": [
+        "R013",
+        "R019",
+        "R020",
+        "R021"
+      ],
+      "cases": [
+        {
+          "id": "network-01",
+          "label": "positive",
+          "rationale": "Пять различных внутренних адресов за одно окно",
+          "events": [
+            {
+              "schema_version": "1.0",
+              "event_type": "network.connect",
+              "timestamp": "2026-11-18T12:00:01Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "/usr/bin/python3",
+                "arguments": "",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              },
+              "network": {
+                "destination_ip": "10.43.0.1",
+                "destination_port": 443
+              }
+            },
+            {
+              "schema_version": "1.0",
+              "event_type": "network.connect",
+              "timestamp": "2026-11-18T12:00:02Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "/usr/bin/python3",
+                "arguments": "",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              },
+              "network": {
+                "destination_ip": "10.43.0.2",
+                "destination_port": 443
+              }
+            },
+            {
+              "schema_version": "1.0",
+              "event_type": "network.connect",
+              "timestamp": "2026-11-18T12:00:03Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "/usr/bin/python3",
+                "arguments": "",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              },
+              "network": {
+                "destination_ip": "10.43.0.3",
+                "destination_port": 443
+              }
+            },
+            {
+              "schema_version": "1.0",
+              "event_type": "network.connect",
+              "timestamp": "2026-11-18T12:00:04Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "/usr/bin/python3",
+                "arguments": "",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              },
+              "network": {
+                "destination_ip": "10.43.0.4",
+                "destination_port": 443
+              }
+            },
+            {
+              "schema_version": "1.0",
+              "event_type": "network.connect",
+              "timestamp": "2026-11-18T12:00:05Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "/usr/bin/python3",
+                "arguments": "",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              },
+              "network": {
+                "destination_ip": "10.43.0.5",
+                "destination_port": 443
+              }
+            }
+          ]
+        },
+        {
+          "id": "network-02",
+          "label": "positive",
+          "rationale": "Запуск инструмента сетевой разведки",
+          "events": [
+            {
+              "schema_version": "1.0",
+              "event_type": "process.exec",
+              "timestamp": "2026-11-18T12:00:00Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "/usr/bin/nmap",
+                "arguments": "-sT 10.43.0.0/24",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              }
+            }
+          ]
+        },
+        {
+          "id": "network-03",
+          "label": "positive",
+          "rationale": "Исследование имён сервисов только через DNS без наблюдаемых TCP connect",
+          "events": [
+            {
+              "schema_version": "1.0",
+              "event_type": "process.exec",
+              "timestamp": "2026-11-18T12:00:00Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "/usr/bin/getent",
+                "arguments": "hosts kubernetes.default.svc",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              }
+            }
+          ]
+        },
+        {
+          "id": "network-04",
+          "label": "negative",
+          "rationale": "Обычный внешне-направленный HTTPS к ненаблюдаемому IP",
+          "events": [
+            {
+              "schema_version": "1.0",
+              "event_type": "network.connect",
+              "timestamp": "2026-11-18T12:00:00Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "/usr/bin/python3",
+                "arguments": "",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              },
+              "network": {
+                "destination_ip": "9.9.9.9",
+                "destination_port": 443
+              }
+            }
+          ]
+        },
+        {
+          "id": "network-05",
+          "label": "negative",
+          "rationale": "Разрешённый запрос внутреннего сервиса вызывает R013",
+          "events": [
+            {
+              "schema_version": "1.0",
+              "event_type": "network.connect",
+              "timestamp": "2026-11-18T12:00:00Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "/usr/bin/python3",
+                "arguments": "",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              },
+              "network": {
+                "destination_ip": "10.43.0.10",
+                "destination_port": 443
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "resources",
+      "title": "Несанкционированное использование вычислительных ресурсов",
+      "target_rules": [
+        "R014",
+        "R015"
+      ],
+      "cases": [
+        {
+          "id": "resources-01",
+          "label": "positive",
+          "rationale": "Имя известного майнера",
+          "events": [
+            {
+              "schema_version": "1.0",
+              "event_type": "process.exec",
+              "timestamp": "2026-11-18T12:00:00Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "/tmp/xmrig",
+                "arguments": "--benchmark",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              }
+            }
+          ]
+        },
+        {
+          "id": "resources-02",
+          "label": "positive",
+          "rationale": "Порт, типичный для майнинг-пула",
+          "events": [
+            {
+              "schema_version": "1.0",
+              "event_type": "network.connect",
+              "timestamp": "2026-11-18T12:00:00Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "/usr/bin/python3",
+                "arguments": "",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              },
+              "network": {
+                "destination_ip": "203.0.113.9",
+                "destination_port": 3333
+              }
+            }
+          ]
+        },
+        {
+          "id": "resources-03",
+          "label": "positive",
+          "rationale": "Тяжёлая вычислительная нагрузка с переименованным процессом, без сетевых индикаторов",
+          "events": [
+            {
+              "schema_version": "1.0",
+              "event_type": "process.exec",
+              "timestamp": "2026-11-18T12:00:00Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "/usr/bin/worker",
+                "arguments": "--threads=8",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              }
+            }
+          ]
+        },
+        {
+          "id": "resources-04",
+          "label": "negative",
+          "rationale": "Легитимная ресурсоёмкая задача",
+          "events": [
+            {
+              "schema_version": "1.0",
+              "event_type": "process.exec",
+              "timestamp": "2026-11-18T12:00:00Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "/usr/bin/python3",
+                "arguments": "train_model.py",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              }
+            }
+          ]
+        },
+        {
+          "id": "resources-05",
+          "label": "negative",
+          "rationale": "Разрешённый бенчмарк с именем xmrig вызывает потенциальное FP",
+          "events": [
+            {
+              "schema_version": "1.0",
+              "event_type": "process.exec",
+              "timestamp": "2026-11-18T12:00:00Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "/tmp/xmrig",
+                "arguments": "--benchmark",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "workload",
+      "title": "Создание дополнительной контейнерной нагрузки",
+      "target_rules": [
+        "R016"
+      ],
+      "cases": [
+        {
+          "id": "workload-01",
+          "label": "positive",
+          "rationale": "Успешное создание Pod по Kubernetes Audit",
+          "events": [
+            {
+              "schema_version": "1.0",
+              "event_type": "k8s.audit",
+              "timestamp": "2026-11-18T12:00:00Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "",
+                "arguments": "",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              },
+              "audit": {
+                "verb": "create",
+                "resource": "pods",
+                "name": "trial-pod",
+                "user": "system:serviceaccount:security-lab:workload",
+                "response_code": 201,
+                "stage": "ResponseComplete"
+              }
+            }
+          ]
+        },
+        {
+          "id": "workload-02",
+          "label": "positive",
+          "rationale": "Успешное создание Deployment по Kubernetes Audit",
+          "events": [
+            {
+              "schema_version": "1.0",
+              "event_type": "k8s.audit",
+              "timestamp": "2026-11-18T12:00:00Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "",
+                "arguments": "",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              },
+              "audit": {
+                "verb": "create",
+                "resource": "deployments",
+                "name": "new-app",
+                "user": "system:serviceaccount:security-lab:workload",
+                "response_code": 201,
+                "stage": "ResponseComplete"
+              }
+            }
+          ]
+        },
+        {
+          "id": "workload-03",
+          "label": "positive",
+          "rationale": "Изменение числа реплик существующего Deployment пока не покрыто create-only правилом",
+          "events": [
+            {
+              "schema_version": "1.0",
+              "event_type": "k8s.audit",
+              "timestamp": "2026-11-18T12:00:00Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "",
+                "arguments": "",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              },
+              "audit": {
+                "verb": "patch",
+                "resource": "deployments",
+                "name": "scaled-app",
+                "user": "system:serviceaccount:security-lab:workload",
+                "response_code": 200,
+                "stage": "ResponseComplete"
+              }
+            }
+          ]
+        },
+        {
+          "id": "workload-04",
+          "label": "negative",
+          "rationale": "Отклоненный запрос на создание Pod",
+          "events": [
+            {
+              "schema_version": "1.0",
+              "event_type": "k8s.audit",
+              "timestamp": "2026-11-18T12:00:00Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "",
+                "arguments": "",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              },
+              "audit": {
+                "verb": "create",
+                "resource": "pods",
+                "name": "trial-pod",
+                "user": "system:serviceaccount:security-lab:forbidden",
+                "response_code": 403,
+                "stage": "ResponseComplete"
+              }
+            }
+          ]
+        },
+        {
+          "id": "workload-05",
+          "label": "negative",
+          "rationale": "Авторизованное административное создание Pod вызывает потенциальное FP",
+          "events": [
+            {
+              "schema_version": "1.0",
+              "event_type": "k8s.audit",
+              "timestamp": "2026-11-18T12:00:00Z",
+              "source": "quality-synthetic",
+              "node": "quality-node",
+              "sensor": {
+                "id": "synthetic",
+                "type": "jsonl",
+                "cluster": "lab-k3s"
+              },
+              "process": {
+                "binary": "",
+                "arguments": "",
+                "exec_id": "p1",
+                "parent_exec_id": "",
+                "uid": 1000
+              },
+              "kubernetes": {
+                "namespace": "security-lab",
+                "pod": "quality-trial",
+                "pod_uid": "quality-pod",
+                "container_id": "trial-c"
+              },
+              "audit": {
+                "verb": "create",
+                "resource": "pods",
+                "name": "trial-pod",
+                "user": "system:admin",
+                "response_code": 201,
+                "stage": "ResponseComplete"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

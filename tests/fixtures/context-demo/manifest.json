@@ -1,0 +1,7 @@
+{
+  "schema_version": "1.0",
+  "trials": [
+    {"id":"DEMO-W001","scenario":"workload","label":"positive","event_ids":["demo-unauthorized-001"]},
+    {"id":"DEMO-W002","scenario":"workload","label":"negative","event_ids":["demo-approved-001"]}
+  ]
+}

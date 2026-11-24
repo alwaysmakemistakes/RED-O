@@ -1,0 +1,25 @@
+{
+  "version": "1.0.2",
+  "title": "RED-O — Kubernetes runtime threat detection",
+  "distribution": "source-only",
+  "build": "./build.sh (Go 1.23+, locally compiled)",
+  "rules": {"signature": 17, "correlation": 5},
+  "capabilities": [
+    "Tetragon/eBPF and optional Kubernetes Audit collection",
+    "Event-time alignment, rules and correlation with source event IDs",
+    "JSONL retention and independent ClickHouse Ingester",
+    "Web UI with local authentication and JSONL fallback",
+    "Read-only diagnostics and offline/live rule verification",
+    "Quality evaluation with telemetry coverage and latency metrics",
+    "Optional advisory context annotations"
+  ],
+  "limitations": [
+    "Laboratory prototype; no production certification or attack blocking",
+    "R022 requires a separately controlled privilege-raise experiment",
+    "R017 test detects access to a named file path, not necessarily Unix-socket communication",
+    "R011 kprobe sees a capability-change attempt, not verified escalation",
+    "Missing TracingPolicy or Kubernetes Audit limits telemetry coverage",
+    "Replay is synthetic; Live rule smoke does not measure real-world precision or recall",
+    "Source distribution contains no executable RED-O binary or private runtime data"
+  ]
+}

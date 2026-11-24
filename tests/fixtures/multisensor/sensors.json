@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0",
+  "sensors": [
+    {
+      "id": "lab-tetra-a",
+      "type": "jsonl",
+      "cluster": "lab-k3s",
+      "node": "node-a",
+      "path": "tests/fixtures/multisensor/sensor-a.jsonl"
+    },
+    {
+      "id": "lab-tetra-b",
+      "type": "jsonl",
+      "cluster": "lab-k3s",
+      "node": "node-a",
+      "path": "tests/fixtures/multisensor/sensor-b.jsonl"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+name: RED-O — source build and verification
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  offline-release-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Offline checks: Go, Python, quality, watermark and all 22 rules
+        run: python3 tools/release_smoke.py --project . --output benchmark-results/ci-release-smoke
+      - name: Upload release gate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: red-o-verification
+          path: benchmark-results/ci-release-smoke/
+          if-no-files-found: warn

@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0",
+  "policies": [
+    {
+      "id": "demo-preauthorized-pod-creation",
+      "enabled": true,
+      "decision": "approved",
+      "reason": "Synthetic demo: independently preapproved creation of this exact Pod (not a live policy)",
+      "rule_ids": ["R016"],
+      "match": {
+        "cluster": "lab-k3s",
+        "namespace": "security-lab",
+        "audit_user": "system:admin",
+        "audit_resource": "pods",
+        "audit_name": "demo-approved-pod"
+      }
+    }
+  ]
+}

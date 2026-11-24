@@ -1,0 +1,47 @@
+{
+  "schema_version": "1.0",
+  "policies": [
+    {
+      "id": "example-approved-diagnostic-command",
+      "enabled": false,
+      "decision": "approved",
+      "reason": "Example only: independently approved one-time diagnostic shell; never auto-enable a blanket shell allowlist",
+      "rule_ids": ["R001", "R009"],
+      "match": {
+        "cluster": "lab-k3s",
+        "namespace": "security-lab",
+        "pod": "ebpf-test",
+        "process_binary": "/bin/sh",
+        "arguments_contains": "REPLACE_WITH_UNIQUE_PREAPPROVED_ACTION_MARKER"
+      },
+      "valid_from": "2026-11-21T17:00:00Z",
+      "valid_until": "2026-11-21T18:00:00Z"
+    },
+    {
+      "id": "example-approved-pod-create",
+      "enabled": false,
+      "decision": "approved",
+      "reason": "Example only: preapproved exact API resource creation; verify signed change request independently",
+      "rule_ids": ["R016"],
+      "match": {
+        "cluster": "lab-k3s",
+        "namespace": "security-lab",
+        "audit_user": "system:admin",
+        "audit_resource": "pods",
+        "audit_name": "REPLACE_WITH_PREAPPROVED_POD_NAME"
+      }
+    },
+    {
+      "id": "example-elevate-sensitive-credential",
+      "enabled": false,
+      "decision": "elevate",
+      "reason": "Example only: sensitive credential access in this specifically scoped pod",
+      "rule_ids": ["R010"],
+      "match": {
+        "cluster": "lab-k3s",
+        "namespace": "security-lab",
+        "pod": "REPLACE_WITH_MONITORED_POD"
+      }
+    }
+  ]
+}

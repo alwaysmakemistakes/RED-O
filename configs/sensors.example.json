@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0",
+  "sensors": [
+    {
+      "id": "k3s-main",
+      "type": "tetra",
+      "cluster": "lab-k3s",
+      "node": "main",
+      "namespace": "kube-system",
+      "pod": "REPLACE_WITH_TETRAGON_POD_NAME",
+      "container": "tetragon",
+      "event_namespace": "security-lab"
+    },
+    {
+      "id": "k3s-api-audit",
+      "type": "audit",
+      "cluster": "lab-k3s",
+      "path": "/var/lib/rancher/k3s/server/logs/audit.log",
+      "from_start": false
+    }
+  ]
+}
